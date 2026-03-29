@@ -1,0 +1,253 @@
+# import cv2
+# from ultralytics import YOLO
+# import cvzone
+# import urllib.parse
+#
+# # 1. Camera & Credentials
+# user = "admin"
+# password = "boss321#"
+# ip = "192.168.2.42"
+# safe_password = urllib.parse.quote(password)
+# path = "cam/realmonitor?channel=1&subtype=0"
+# url = f"rtsp://{user}:{safe_password}@{ip}:554/{path}"
+#
+# cap = cv2.VideoCapture(url)
+# w, h = 1280, 720
+#
+# # 2. Model Setup
+# # Upgraded to the 'Small' model for better detection of seated people
+# model = YOLO("yolo26n.pt")
+#
+# while cap.isOpened():
+#     success, frame = cap.read()
+#     if not success:
+#         break
+#
+#     frame = cv2.resize(frame, (w, h))
+#
+#     # 3. Detect and Track with BoT-SORT
+#     # conf=0.30: Lowers the threshold so it detects people partially hidden by laptops
+#     # tracker="botsort.yaml": Upgrades the memory so IDs stick to people based on appearance
+#     results = model.track(frame, persist=True, classes=[0], conf=0.25, tracker="botsort.yaml")
+#
+#     current_people_count = 0
+#
+#     # 4. Draw bounding boxes and Unique IDs
+#     if results[0].boxes.id is not None:
+#         ids = results[0].boxes.id.cpu().numpy().astype(int)
+#         boxes = results[0].boxes.xyxy.cpu().numpy().astype(int)
+#
+#         # Update the headcount based on exactly how many IDs it currently sees
+#         current_people_count = len(ids)
+#
+#         for track_id, box in zip(ids, boxes):
+#             x1, y1, x2, y2 = box
+#             cx = int(x1 + x2) // 2
+#             cy = int(y1 + y2) // 2
+#
+#             # Draw tracking dots, boxes, and the Unique ID labels
+#             cv2.circle(frame, (cx, cy), 4, (255, 0, 0), -1)
+#             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+#
+#             # Display the ID clearly above the person
+#             cvzone.putTextRect(frame, f'ID: {track_id}', (max(0, x1), max(0, y1 - 10)),
+#                                scale=1.2, thickness=1, colorR=(0, 0, 0), colorT=(255, 255, 255))
+#
+#     # 5. Display the live Total Count
+#     cvzone.putTextRect(frame, f"PEOPLE IN ROOM: {current_people_count}", (40, 80),
+#                        scale=2, thickness=2, colorR=(255, 0, 255))
+#
+#     cv2.imshow("Office People Counter", frame)
+#
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#         break
+#
+# cap.release()
+# cv2.destroyAllWindows()
+
+#
+# import cv2
+# from ultralytics import YOLO
+# import cvzone
+# import urllib.parse
+#
+# # 1. Camera & Credentials
+# user = "admin"
+# password = "boss321#"
+# ip = "192.168.2.42"
+# safe_password = urllib.parse.quote(password)
+# path = "cam/realmonitor?channel=1&subtype=0"
+# url = f"rtsp://{user}:{safe_password}@{ip}:554/{path}"
+#
+# cap = cv2.VideoCapture(url)
+# w, h = 1280, 720
+#
+# # 2. Model Setup
+# # Note: I left this as 'yolov8s.pt' (Small model) for better detection of seated people.
+# # If you actually have a custom trained model named 'yolo26n.pt', change this back!
+# model = YOLO("yolov8s.pt")
+#
+# while cap.isOpened():
+#     success, frame = cap.read()
+#     if not success:
+#         break
+#
+#     frame = cv2.resize(frame, (w, h))
+#
+#     # 3. Detect and Track with BoT-SORT
+#     # conf=0.30: Lowers the threshold to catch people behind laptops
+#     # tracker="botsort.yaml": Uses appearance and motion to keep IDs stable
+#     results = model.track(frame, persist=True, classes=[0], conf=0.45, tracker="botsort.yaml")
+#
+#     current_people_count = 0
+#
+#     # 4. Draw bounding boxes and Unique IDs
+#     if results[0].boxes.id is not None:
+#         ids = results[0].boxes.id.cpu().numpy().astype(int)
+#         boxes = results[0].boxes.xyxy.cpu().numpy().astype(int)
+#
+#         # The headcount is exactly how many unique IDs YOLO sees in this specific frame
+#         current_people_count = len(ids)
+#
+#         for track_id, box in zip(ids, boxes):
+#             x1, y1, x2, y2 = box
+#             cx = int(x1 + x2) // 2
+#             cy = int(y1 + y2) // 2
+#
+#             # Draw tracking dots and boxes
+#             cv2.circle(frame, (cx, cy), 4, (255, 0, 0), -1)
+#             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+#
+#             # Display the ID clearly above the person
+#             cvzone.putTextRect(frame, f'ID: {track_id}', (max(0, x1), max(0, y1 - 10)),
+#                                scale=1.2, thickness=1, colorR=(0, 0, 0), colorT=(255, 255, 255))
+#
+#     # 5. Display the live Total Count (No IN/OUT logic)
+#     cvzone.putTextRect(frame, f"PEOPLE IN ROOM: {current_people_count}", (40, 80),
+#                        scale=2, thickness=2, colorR=(255, 0, 255))
+#
+#     cv2.imshow("Office People Counter", frame)
+#
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#         break
+#
+# cap.release()
+# cv2.destroyAllWindows()
+#
+
+
+import cv2
+from ultralytics import YOLO
+import cvzone
+import urllib.parse
+import math
+
+# 1. Camera & Credentials
+user = "admin"
+password = "boss321#"
+ip = "192.168.2.42"
+safe_password = urllib.parse.quote(password)
+path = "cam/realmonitor?channel=1&subtype=0"
+url = f"rtsp://{user}:{safe_password}@{ip}:554/{path}"
+
+cap = cv2.VideoCapture(url)
+w, h = 1280, 720
+
+# 2. UPGRADE: Load the YOLO Pose Model
+# This model outputs bounding boxes PLUS skeletal keypoints
+model = YOLO("yolov8s-pose.pt")
+
+# Dictionary to store the previous positions to calculate speed
+history = {}
+
+while cap.isOpened():
+    success, frame = cap.read()
+    if not success:
+        break
+
+    frame = cv2.resize(frame, (w, h))
+
+    # 3. Detect, Track, and Estimate Pose
+    # 3. Detect, Track, and Estimate Pose
+    results = model.track(frame, persist=True, classes=[0], conf=0.25, tracker="botsort.yaml")
+
+    current_people_count = 0
+
+    # ---> THIS IS THE MISSING BLOCK <---
+    # Only try to extract data if YOLO actually detects at least one person with an ID
+    if results[0].boxes.id is not None:
+        ids = results[0].boxes.id.cpu().numpy().astype(int)
+        boxes = results[0].boxes.xyxy.cpu().numpy().astype(int)
+        keypoints = results[0].keypoints.xy.cpu().numpy()  # We need the keypoints too!
+
+        current_people_count = len(ids)
+
+        # Make sure the for loop is indented INSIDE the if statement!
+        for i, (track_id, box) in enumerate(zip(ids, boxes)):
+            x1, y1, x2, y2 = box
+            cx = int(x1 + x2) // 2
+            cy = int(y1 + y2) // 2
+
+            box_w = x2 - x1
+            box_h = y2 - y1
+
+            # 1. Check if Walking
+            activity = "Stationary"
+            if track_id in history:
+                prev_cx, prev_cy = history[track_id]
+                if math.sqrt((cx - prev_cx) ** 2 + (cy - prev_cy) ** 2) > 3.0:
+                    activity = "Walking"
+            history[track_id] = (cx, cy)
+
+            # 2. Extract Keypoints
+            person_kpts = keypoints[i]
+            l_shoulder_y = person_kpts[5][1]
+            r_shoulder_y = person_kpts[6][1]
+            l_wrist_x, l_wrist_y = person_kpts[9][0], person_kpts[9][1]
+            r_wrist_x, r_wrist_y = person_kpts[10][0], person_kpts[10][1]
+            l_hip_y = person_kpts[11][1]
+            r_hip_y = person_kpts[12][1]
+
+            wrists_visible = (l_wrist_y > 0 and r_wrist_y > 0)
+            is_using_pc = False
+
+            # 3. PRIORITY 1: The "Using PC" Heuristic
+            if activity == "Stationary" and wrists_visible:
+                wrists_below_shoulders = (l_wrist_y > l_shoulder_y) and (r_wrist_y > r_shoulder_y)
+                wrists_above_hips = (l_wrist_y < l_hip_y) and (r_wrist_y < r_hip_y)
+                hands_together = abs(l_wrist_x - r_wrist_x) < 100
+
+                if wrists_below_shoulders and wrists_above_hips and hands_together:
+                    activity = "Using PC"
+                    is_using_pc = True
+
+            # 4. PRIORITY 2: Check if Standing (Only if NOT using PC)
+            if activity == "Stationary" and not is_using_pc:
+                if box_h > 1.8 * box_w:
+                    activity = "Standing"
+                else:
+                    activity = "Sitting"
+
+            # 5. Draw bounding box and Activity Label
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+            text = f'ID: {track_id} | {activity}'
+            cvzone.putTextRect(frame, text, (max(0, x1), max(0, y1 - 15)),
+                               scale=1.2, thickness=1, colorR=(50, 50, 50), colorT=(0, 255, 255))
+
+    # ---> MAKE SURE THESE ARE OUTSIDE THE FOR LOOP BUT INSIDE THE WHILE LOOP <---
+    # Cleanup memory
+    if results[0].boxes.id is not None:
+        current_ids = ids.tolist()
+        history = {k: v for k, v in history.items() if k in current_ids}
+
+    # Display total count
+    cvzone.putTextRect(frame, f"PEOPLE: {current_people_count}", (40, 80), scale=2, thickness=2, colorR=(255, 0, 255))
+
+    cv2.imshow("Office Activity Monitor", frame)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
